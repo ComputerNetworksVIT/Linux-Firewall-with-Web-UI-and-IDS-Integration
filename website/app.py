@@ -1,9 +1,5 @@
 # app.py
 #
-# -- UPDATED to be a standalone server --
-# This version of the Flask app now serves both the API endpoints
-# and the index.html frontend. No Nginx needed for testing.
-#
 # To run:
 #   pip install Flask flask-cors
 #   python3 app.py
@@ -16,10 +12,10 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 app = Flask(__name__)
-# CORS is still good practice, though less critical now
+
 CORS(app)
 
-# The name of our custom iptables chain
+# The name of the custom iptables chain
 CHAIN_NAME = "MyCustomFirewall"
 
 def run_command(command):
