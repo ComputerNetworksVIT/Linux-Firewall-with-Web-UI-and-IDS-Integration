@@ -1,7 +1,3 @@
-# ids_monitor.py (DEBUG VERSION)
-# This version prints every line it reads to help diagnose issues.
-# UPDATED to pretty-print JSON for better readability.
-# UPDATED with a whitelist to prevent blocking trusted IPs.
 
 import time
 import json
@@ -12,12 +8,9 @@ LOG_FILE = "/var/log/suricata/eve.json"
 API_URL = "http://127.0.0.1:5000/api/rules"
 SEEN_IPS = set()
 
-# --- NEW FEATURE: WHITELIST ---
-# Add your trusted IP addresses here (e.g., your home machine's Tailscale IP).
-# The script will NEVER block an IP address that is in this list.
 WHITELIST_IPS = {
     "127.0.0.1", 
-    "100.73.229.94"# <-- IMPORTANT: Change this to your trusted machine's Tailscale IP
+    "100.73.229.94"
 }
 
 def follow(thefile):
@@ -33,7 +26,6 @@ def follow(thefile):
 
 def block_ip(ip):
     """Adds the IP to the blocklist via the Flask API, checking the whitelist first."""
-    # --- NEW WHITELIST CHECK ---
     if ip in WHITELIST_IPS:
         print(f"\n--> WHITELIST: Detected alert from trusted IP {ip}. Ignoring.\n")
         return
@@ -65,18 +57,16 @@ if __name__ == "__main__":
             print("--> DEBUG: Successfully opened log file.")
             loglines = follow(logfile)
             for line in loglines:
-                # We will now parse every line. If it's valid JSON, we pretty-print it.
                 try:
                     data = json.loads(line)
                     
-                    # Pretty-print the full JSON object for readability
+                    # json pretty-print
                     pretty_json = json.dumps(data, indent=4)
                     print("\n----------------------------------------------------")
                     print(f"--> DEBUG: Read new JSON object from log:")
                     print(pretty_json)
                     print("----------------------------------------------------\n")
 
-                    # Check if this readable JSON is an alert we need to act on
                     if data.get("event_type") == "alert":
                         src_ip = data.get("src_ip")
                         alert_signature = data.get("alert", {}).get("signature", "N/A")
@@ -90,7 +80,6 @@ if __name__ == "__main__":
                         if src_ip:
                             block_ip(src_ip)
                 except json.JSONDecodeError:
-                    # This line wasn't JSON, just print it raw.
                     print(f"--> DEBUG: Read non-JSON line from log: {line.strip()}")
                 except Exception as e:
                     print(f"--> ERROR: An error occurred processing a line: {e}")
