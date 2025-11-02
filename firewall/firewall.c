@@ -1,24 +1,4 @@
-/**
- * firewall_core.c
- *
- * This program forms the core of our user-space firewall. It uses the
- * libnetfilter_queue library to capture packets that have been queued by the
- * kernel's iptables rules.
- *
- * How it works:
- * 1. An iptables rule is set up to send packets to a specific queue number (e.g., 0).
- * Example: `sudo iptables -A INPUT -j NFQUEUE --queue-num 0`
- * 2. This program binds to that queue.
- * 3. When a packet arrives in the queue, the `packet_handler` callback is invoked.
- * 4. For now, this is a simple pass-through filter. It accepts all packets.
- * The real logic for rule-matching would be implemented in `packet_handler`.
- *
- * Compilation:
- * gcc -o firewall_core firewall_core.c -lnetfilter_queue -lnfnetlink
- *
- * Running:
- * sudo ./firewall_core
- */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,7 +9,6 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 
-// This callback function is called for each packet in the queue
 static int packet_handler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
                           struct nfq_data *nfa, void *data) {
     int id = 0;
@@ -55,15 +34,7 @@ static int packet_handler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 
         printf("Received packet: ID %d, Src: %s, Dst: %s\n",
                id, inet_ntoa(src_addr), inet_ntoa(dst_addr));
-
-        // TODO: Implement your rule-matching logic here.
-        // You would read rules from a file or another source and compare them
-        // against the packet's source/dest IP, ports, protocol, etc.
-        // For now, we just accept everything.
     }
-
-    // Set the verdict for the packet: NF_ACCEPT or NF_DROP
-    // This tells the kernel what to do with the packet.
     return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
