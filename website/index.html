@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firewall Control Panel</title>
+    <!-- Using Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-cyan-400">Firewall Control Panel</h1>
+            <p class="text-gray-400 mt-2">Manage network rules for your custom C firewall.</p>
+        </header>
+
+        <!-- Rule Management Section -->
+        <main class="max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6">
+            
+            <!-- Add New Rule Form -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4 border-b-2 border-gray-700 pb-2">Add New Rule</h2>
+                <form id="add-rule-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label for="ip" class="block text-sm font-medium text-gray-300 mb-1">Source IP Address</label>
+                        <input type="text" id="ip" name="ip" class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-cyan-500 focus:border-cyan-500" placeholder="e.g., 192.168.1.100" required>
+                    </div>
+                    <div>
+                        <label for="action" class="block text-sm font-medium text-gray-300 mb-1">Action</label>
+                        <select id="action" name="action" class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:ring-cyan-500 focus:border-cyan-500">
+                            <option value="DROP" class="bg-gray-800">DROP</option>
+                            <option value="ACCEPT" class="bg-gray-800">ACCEPT</option>
+                            <option value="REJECT" class="bg-gray-800">REJECT</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">Add Rule</button>
+                </form>
+            </div>
+
+            <!-- Current Rules List -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-4 border-b-2 border-gray-700 pb-2">Current Rules</h2>
+                <div id="loading-spinner" class="text-center p-4">
+                    <p>Loading rules...</p>
+                </div>
+                <div id="rules-table-container" class="overflow-x-auto hidden">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-700/50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Source IP</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Target</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Protocol</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rules-list" class="bg-gray-800 divide-y divide-gray-700">
+                            <!-- Rules will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                <p id="no-rules-message" class="text-center text-gray-400 p-4 hidden">No rules defined yet.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Since the page and API are served from the same place now,
+        // we can use a simpler, relative URL.
+        const API_URL = '/api/rules';
+
+        const addRuleForm = document.getElementById('add-rule-form');
+        const rulesList = document.getElementById('rules-list');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const rulesTableContainer = document.getElementById('rules-table-container');
+        const noRulesMessage = document.getElementById('no-rules-message');
+
+        // Function to fetch and display rules
+        async function fetchRules() {
+            try {
+                loadingSpinner.style.display = 'block';
+                rulesTableContainer.style.display = 'none';
+                noRulesMessage.style.display = 'none';
+                
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const rules = await response.json();
+                
+                rulesList.innerHTML = ''; // Clear existing rules
+
+                if (rules.length === 0) {
+                    noRulesMessage.style.display = 'block';
+                } else {
+                    rulesTableContainer.style.display = 'block';
+                    rules.forEach(rule => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">${rule.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 font-mono">${rule.source}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                    rule.target === 'DROP' ? 'bg-red-900 text-red-300' : 
+                                    rule.target === 'ACCEPT' ? 'bg-green-900 text-green-300' : 
+                                    'bg-yellow-900 text-yellow-300'
+                                }">
+                                    ${rule.target}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${rule.protocol}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="deleteRule('${rule.id}')" class="text-red-500 hover:text-red-700 transition duration-300">Delete</button>
+                            </td>
+                        `;
+                        rulesList.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch rules:', error);
+                rulesList.innerHTML = '<tr><td colspan="5" class="text-center text-red-400 p-4">Error loading rules. Is the backend running?</td></tr>';
+                rulesTableContainer.style.display = 'block';
+            } finally {
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        // Function to add a new rule
+        addRuleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ip = document.getElementById('ip').value;
+            const action = document.getElementById('action').value;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip, action })
+                });
+
+                if (response.ok) {
+                    addRuleForm.reset();
+                    fetchRules(); // Refresh the list
+                } else {
+                    const error = await response.json();
+                    alert(`Error adding rule: ${error.error}`);
+                }
+            } catch (error) {
+                console.error('Failed to add rule:', error);
+                alert('An error occurred. Check the console.');
+            }
+        });
+
+        // Function to delete a rule
+        async function deleteRule(id) {
+            // NOTE: Using a custom modal instead of confirm() would be better in a real app
+            // as confirm() can be blocked by browsers.
+            if (!confirm(`Are you sure you want to delete rule #${id}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+
+                if (response.ok) {
+                    fetchRules(); // Refresh the list
+                } else {
+                    const error = await response.json();
+                    alert(`Error deleting rule: ${error.error}`);
+                }
+            } catch (error) {
+                console.error('Failed to delete rule:', error);
+                alert('An error occurred. Check the console.');
+            }
+        }
+
+        // Initial fetch of rules when the page loads
+        document.addEventListener('DOMContentLoaded', fetchRules);
+    </script>
+</body>
+</html>
+
+
