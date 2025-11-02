@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Firewall Control Panel</title>
-    <!-- Using Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -17,13 +16,11 @@
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-4xl font-bold text-cyan-400">Firewall Control Panel</h1>
-            <p class="text-gray-400 mt-2">Manage network rules for your custom C firewall.</p>
+            <p class="text-gray-400 mt-2">Manage network rules for the firewall.</p>
         </header>
 
-        <!-- Rule Management Section -->
         <main class="max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6">
             
-            <!-- Add New Rule Form -->
             <div class="mb-8">
                 <h2 class="text-2xl font-semibold mb-4 border-b-2 border-gray-700 pb-2">Add New Rule</h2>
                 <form id="add-rule-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -43,7 +40,6 @@
                 </form>
             </div>
 
-            <!-- Current Rules List -->
             <div>
                 <h2 class="text-2xl font-semibold mb-4 border-b-2 border-gray-700 pb-2">Current Rules</h2>
                 <div id="loading-spinner" class="text-center p-4">
@@ -61,7 +57,6 @@
                             </tr>
                         </thead>
                         <tbody id="rules-list" class="bg-gray-800 divide-y divide-gray-700">
-                            <!-- Rules will be dynamically inserted here -->
                         </tbody>
                     </table>
                 </div>
@@ -71,8 +66,6 @@
     </div>
 
     <script>
-        // Since the page and API are served from the same place now,
-        // we can use a simpler, relative URL.
         const API_URL = '/api/rules';
 
         const addRuleForm = document.getElementById('add-rule-form');
@@ -81,7 +74,6 @@
         const rulesTableContainer = document.getElementById('rules-table-container');
         const noRulesMessage = document.getElementById('no-rules-message');
 
-        // Function to fetch and display rules
         async function fetchRules() {
             try {
                 loadingSpinner.style.display = 'block';
@@ -94,7 +86,7 @@
                 }
                 const rules = await response.json();
                 
-                rulesList.innerHTML = ''; // Clear existing rules
+                rulesList.innerHTML = '';
 
                 if (rules.length === 0) {
                     noRulesMessage.style.display = 'block';
@@ -131,7 +123,6 @@
             }
         }
 
-        // Function to add a new rule
         addRuleForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const ip = document.getElementById('ip').value;
@@ -146,7 +137,7 @@
 
                 if (response.ok) {
                     addRuleForm.reset();
-                    fetchRules(); // Refresh the list
+                    fetchRules();
                 } else {
                     const error = await response.json();
                     alert(`Error adding rule: ${error.error}`);
@@ -157,10 +148,7 @@
             }
         });
 
-        // Function to delete a rule
         async function deleteRule(id) {
-            // NOTE: Using a custom modal instead of confirm() would be better in a real app
-            // as confirm() can be blocked by browsers.
             if (!confirm(`Are you sure you want to delete rule #${id}?`)) {
                 return;
             }
@@ -173,7 +161,7 @@
                 });
 
                 if (response.ok) {
-                    fetchRules(); // Refresh the list
+                    fetchRules();
                 } else {
                     const error = await response.json();
                     alert(`Error deleting rule: ${error.error}`);
@@ -183,8 +171,6 @@
                 alert('An error occurred. Check the console.');
             }
         }
-
-        // Initial fetch of rules when the page loads
         document.addEventListener('DOMContentLoaded', fetchRules);
     </script>
 </body>
