@@ -1,4 +1,5 @@
 # Linux Firewall with Web UI and IDS Integration
+by Vibhaansh Bhardwaj(24BCE1401) & Mudit J. Palvadi(24BCE1510)
 
 This project is a comprehensive, multi-layer network security system created for a college project. It combines a low-level C-based firewall with a high-level web interface for rule management and integrates a professional-grade Intrusion Detection System (IDS) for automated threat response.
 
