@@ -112,9 +112,7 @@ gcc -o firewall firewall_core.c -lnetfilter_queue -lnfnetlink
 
 ### 6. Whitelist Your Trusted IP (CRITICAL)
 
-To prevent the IDS from locking you out of your own server, you must add your "attacker" (testing) machine's Tailscale IP to the whitelist.
-
-Find your testing machine's Tailscale IP (run tailscale ip -4 on it).
+Add whatever IPs you need for testing to be in the whitelist
 
 Edit the monitor script:
 
@@ -139,7 +137,7 @@ You will need 5 separate terminals on your firewall server to run all components
 
 ### Terminal 1: Apply the iptables Rules
 
-This is the most important step. Run this entire script to create the MyCustomFirewall chain and safely route traffic. This script is designed to be safe and will not lock you out of SSH.
+This is the most important step. Run this entire script to create the MyCustomFirewall chain and safely route traffic.
 
 ```bash
 #!/bin/bash
@@ -210,7 +208,7 @@ sudo python3 ids_monitor.py
 
 You should see it "Starting IDS monitor..." and waiting.
 
-## How to Test Your Firewall
+## How to Test the Firewall
 
 Your complete system is now running.
 
