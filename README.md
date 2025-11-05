@@ -31,7 +31,7 @@ IDS Monitor (ids_monitor.py): This script "follows" the Suricata alert log (eve.
 
 ## Core Components
 
-- firewall_core.c: The user-space firewall written in C. Uses libnetfilter_queue.
+- firewall_core.c: The firewall written in C. Uses libnetfilter_queue.
 - app.py: The Python Flask web server. Provides a JSON API to manage iptables rules.
 - index.html: A single-page, responsive web interface built with Tailwind CSS for managing the firewall.
 - ids_monitor.py: The Python script that links Suricata to the web API for automated blocking.
